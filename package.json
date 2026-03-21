@@ -2,11 +2,21 @@
   "name": "ai-task",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oydf1994/ai-task.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oydf1994/ai-task/issues"
+  },
+  "homepage": "https://github.com/oydf1994/ai-task",
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
     "dev": "next dev",
+    "setup": "tsx scripts/setup.ts",
+    "doctor": "tsx scripts/doctor.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
