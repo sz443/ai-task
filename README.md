@@ -73,6 +73,11 @@ pnpm doctor
 pnpm dev
 ```
 
+默认会同时启动：
+
+- Web 应用
+- 后台任务轮询器（poller）
+
 默认访问：
 
 ```text
@@ -101,6 +106,8 @@ pnpm task:poller:once
 ```bash
 pnpm task:poller
 ```
+
+说明：`pnpm dev` 与 `pnpm start` 已经会自动带起 poller。只有在你想单独运行轮询器时，才需要手动执行这条命令。
 
 ## 推荐接入流程
 
@@ -149,7 +156,10 @@ pnpm task:poller
 ```bash
 pnpm setup           # 初始化 OpenClaw agents 与配置
 pnpm doctor          # 运行环境与配置自检
-pnpm dev             # 启动 Web 应用
+pnpm dev             # 启动 Web 应用 + poller
+pnpm dev:web         # 仅启动 Web 开发服务
+pnpm start           # 启动生产服务 + poller
+pnpm start:web       # 仅启动 Web 生产服务
 pnpm build           # 构建生产版本
 pnpm typecheck       # TypeScript 校验
 pnpm lint            # ESLint 校验

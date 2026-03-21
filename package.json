@@ -14,11 +14,13 @@
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx scripts/run-with-poller.ts dev",
     "setup": "tsx scripts/setup.ts",
     "doctor": "tsx scripts/doctor.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "tsx scripts/run-with-poller.ts start",
+    "dev:web": "next dev",
+    "start:web": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "task:poller": "tsx scripts/task-poller.ts",
