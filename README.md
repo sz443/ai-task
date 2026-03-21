@@ -203,17 +203,3 @@ openclaw --help
 - 任务描述是否足够明确
 - dispatcher 输出的分析与验证命令是否合理
 
-## 开源协作建议
-
-如果你要把这个项目给团队内部或开源用户使用，推荐标准启动流程如下：
-
-```bash
-pnpm install
-pnpm setup
-pnpm doctor
-pnpm db:push
-pnpm db:seed
-pnpm dev
-```
-
-这样同事只需要准备 Node、pnpm 和 OpenClaw，就可以在本机完成初始化。
