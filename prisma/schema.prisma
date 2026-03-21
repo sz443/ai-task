@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskType {
+  BUG
+  FEATURE
+  CHORE
+  REFACTOR
+  TEST_TASK
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  DISPATCHING
+  IN_PROGRESS_FRONTEND
+  READY_FOR_QA
+  IN_PROGRESS_QA
+  IN_REVIEW
+  AWAITING_HUMAN_APPROVAL
+  APPROVED
+  REJECTED
+  DONE
+  FAILED
+  BLOCKED
+}
+
+enum AgentRole {
+  DISPATCHER
+  FRONTEND
+  QA
+  REVIEWER
+}
+
+enum AgentRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  BLOCKED
+  CANCELLED
+}
+
+enum CommandStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum CommandKind {
+  GIT
+  SHELL
+  LINT
+  TYPECHECK
+  TEST
+  BUILD
+  QA
+  REVIEW
+}
+
+enum ArtifactKind {
+  EXECUTION_CONTEXT
+  PROMPT_SNAPSHOT
+  FILE_LIST
+  DIFF_SUMMARY
+  PATCH_SUMMARY
+  QA_REPORT
+  REVIEW_REPORT
+  HUMAN_APPROVAL_NOTE
+  ERROR_REPORT
+  NOTE
+}
+
+enum ActorType {
+  HUMAN
+  SYSTEM
+  AGENT
+}
+
+enum StatusTrigger {
+  MANUAL_CREATE
+  MANUAL_UPDATE
+  DISPATCH_START
+  AGENT_PROGRESS
+  QA_COMPLETE
+  REVIEW_COMPLETE
+  HUMAN_APPROVED
+  HUMAN_REJECTED
+  EXECUTION_FAILED
+  SYSTEM_SYNC
+}
+
+enum AgentRuntimeKind {
+  MOCK
+  OPENCLAW
+  LOCAL_RUNTIME
+}
+
+model Project {
+  id                 String            @id @default(cuid())
+  slug               String            @unique
+  name               String
+  description        String?
+  repoPath           String
+  defaultBranch      String            @default("main")
+  allowedPathsText   String?
+  forbiddenPathsText String?
+  lintCommand        String?
+  typecheckCommand   String?
+  testCommand        String?
+  buildCommand       String?
+  autoCommitEnabled  Boolean           @default(false)
+  autoPushEnabled    Boolean           @default(false)
+  isArchived         Boolean           @default(false)
+  createdBy          String            @default("system")
+  updatedBy          String            @default("system")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  tasks              Task[]
+  agentRuns          AgentRun[]
+  commandLogs        CommandLog[]
+  executionConfig    ExecutionConfig?
+
+  @@index([name])
+  @@index([isArchived])
+}
+
+model Task {
+  id                  String                     @id @default(cuid())
+  sequence            Int                        @unique
+  projectId           String
+  title               String
+  description         String
+  type                TaskType
+  priority            TaskPriority               @default(MEDIUM)
+  status              TaskStatus                 @default(TODO)
+  allowedPathsText    String?
+  forbiddenPathsText  String?
+  notes               String?
+  branchName          String?
+  currentAgentRole    AgentRole?
+  failureReason       String?
+  blockedReason       String?
+  lastDispatchSummary String?
+  lastReviewSummary   String?
+  humanApprovalNote   String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdBy           String                     @default("local-user")
+  updatedBy           String                     @default("local-user")
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  project             Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  acceptanceCriteria  TaskAcceptanceCriterion[]
+  agentRuns           AgentRun[]
+  commandLogs         CommandLog[]
+  artifacts           Artifact[]
+  statusHistory       StatusHistory[]
+  comments            TaskComment[]
+
+  @@index([projectId, status])
+  @@index([projectId, priority])
+  @@index([projectId, type])
+  @@index([createdAt])
+}
+
+model TaskAcceptanceCriterion {
+  id          String   @id @default(cuid())
+  taskId      String
+  content     String
+  sortOrder   Int      @default(0)
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, sortOrder])
+}
+
+model AgentRun {
+  id                String           @id @default(cuid())
+  taskId            String
+  projectId         String
+  role              AgentRole
+  status            AgentRunStatus   @default(QUEUED)
+  provider          AgentRuntimeKind @default(MOCK)
+  title             String?
+  attempt           Int              @default(1)
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  summary           String?
+  errorMessage      String?
+  promptSnapshot    String?
+  inputContextJson  String?
+  outputContextJson String?
+  branchName        String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  task              Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commandLogs       CommandLog[]
+  artifacts         Artifact[]
+
+  @@index([taskId, createdAt])
+  @@index([projectId, role, status])
+}
+
+model CommandLog {
+  id         String        @id @default(cuid())
+  taskId      String
+  projectId   String
+  agentRunId  String?
+  kind       CommandKind   @default(SHELL)
+  label      String?
+  command    String
+  cwd        String
+  status     CommandStatus @default(PENDING)
+  exitCode   Int?
+  stdout     String?
+  stderr     String?
+  durationMs Int?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  task       Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agentRun   AgentRun?     @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+
+  @@index([taskId, createdAt])
+  @@index([agentRunId, createdAt])
+  @@index([projectId, kind])
+}
+
+model Artifact {
+  id          String       @id @default(cuid())
+  taskId      String
+  agentRunId  String?
+  kind        ArtifactKind
+  title       String
+  summary     String?
+  path        String?
+  mimeType    String?
+  content     String?
+  contentJson String?
+  createdAt   DateTime     @default(now())
+  task        Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agentRun    AgentRun?    @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+
+  @@index([taskId, kind, createdAt])
+  @@index([agentRunId, createdAt])
+}
+
+model StatusHistory {
+  id         String        @id @default(cuid())
+  taskId     String
+  fromStatus TaskStatus?
+  toStatus   TaskStatus
+  trigger    StatusTrigger @default(SYSTEM_SYNC)
+  actorType  ActorType     @default(SYSTEM)
+  actorName  String?
+  agentRole  AgentRole?
+  note       String?
+  createdAt  DateTime      @default(now())
+  task       Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+}
+
+model TaskComment {
+  id         String    @id @default(cuid())
+  taskId     String
+  authorType ActorType @default(HUMAN)
+  authorName String
+  body       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+}
+
+model ExecutionConfig {
+  id                String           @id @default(cuid())
+  projectId         String           @unique
+  runtimeKind       AgentRuntimeKind @default(MOCK)
+  runtimeBaseUrl    String?
+  dispatcherName    String           @default("dispatcher")
+  frontendName      String           @default("frontend")
+  qaName            String           @default("qa")
+  reviewerName      String           @default("reviewer")
+  maxRetries        Int              @default(1)
+  timeoutSeconds    Int              @default(1800)
+  allowBranchCreate Boolean          @default(true)
+  allowAutoCommit   Boolean          @default(false)
+  allowAutoPush     Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
