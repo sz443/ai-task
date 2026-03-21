@@ -4,12 +4,12 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/oydf1994/ai-task.git"
+    "url": "https://github.com/sz443/ai-task.git"
   },
   "bugs": {
-    "url": "https://github.com/oydf1994/ai-task/issues"
+    "url": "https://github.com/sz443/ai-task/issues"
   },
-  "homepage": "https://github.com/oydf1994/ai-task",
+  "homepage": "https://github.com/sz443/ai-task",
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
