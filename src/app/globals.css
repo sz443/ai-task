@@ -48,6 +48,10 @@
 }
 
 :root {
+  --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  --font-geist-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
   --background: oklch(0.985 0.008 254);
   --foreground: oklch(0.24 0.03 258);
   --card: oklch(0.995 0.01 255);

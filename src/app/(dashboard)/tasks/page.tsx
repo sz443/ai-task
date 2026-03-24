@@ -1,13 +1,21 @@
 import Link from "next/link";
+import { connection } from "next/server";
 
+import { RouteAutoRefresh } from "@/components/common/route-auto-refresh";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { TaskTable } from "@/components/tasks/task-table";
 import { Button } from "@/components/ui/button";
+import { appEnv } from "@/lib/env";
+import { getLiveRouteRefreshIntervalMs } from "@/lib/live-updates";
 import { listTasks } from "@/server/repositories/tasks";
 
 export default async function TasksPage() {
+  await connection();
+  const refreshIntervalMs = getLiveRouteRefreshIntervalMs(
+    appEnv.taskPollerIntervalMs,
+  );
   const tasks = await listTasks();
   const awaitingApproval = tasks.filter(
     (task) => task.status === "AWAITING_HUMAN_APPROVAL",
@@ -16,6 +24,7 @@ export default async function TasksPage() {
 
   return (
     <>
+      <RouteAutoRefresh intervalMs={refreshIntervalMs} />
       <PageHeader
         eyebrow="Tasks"
         title="任务中心"

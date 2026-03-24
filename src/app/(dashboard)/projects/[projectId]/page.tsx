@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { RouteAutoRefresh } from "@/components/common/route-auto-refresh";
 import { PageHeader } from "@/components/common/page-header";
 import { ProjectDangerZone } from "@/components/projects/project-danger-zone";
 import { StatCard } from "@/components/common/stat-card";
 import { Button } from "@/components/ui/button";
+import { appEnv } from "@/lib/env";
+import { getLiveRouteRefreshIntervalMs } from "@/lib/live-updates";
 import { getProjectById } from "@/server/repositories/projects";
 
 export default async function ProjectDetailPage({
@@ -13,6 +16,9 @@ export default async function ProjectDetailPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
+  const refreshIntervalMs = getLiveRouteRefreshIntervalMs(
+    appEnv.taskPollerIntervalMs,
+  );
   const project = await getProjectById(projectId);
 
   if (!project) {
@@ -21,6 +27,7 @@ export default async function ProjectDetailPage({
 
   return (
     <>
+      <RouteAutoRefresh intervalMs={refreshIntervalMs} />
       <PageHeader
         eyebrow="Project Detail"
         title={project.name}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { RouteAutoRefresh } from "@/components/common/route-auto-refresh";
 import { PageHeader } from "@/components/common/page-header";
 import { AgentRunTimeline } from "@/components/execution/agent-run-timeline";
 import { ApprovalActions } from "@/components/execution/approval-actions";
@@ -10,6 +11,8 @@ import { ExecutionSummaryCard } from "@/components/execution/execution-summary-c
 import { TaskDangerZone } from "@/components/tasks/task-danger-zone";
 import { PriorityBadge } from "@/components/tasks/priority-badge";
 import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
+import { appEnv } from "@/lib/env";
+import { getLiveRouteRefreshIntervalMs } from "@/lib/live-updates";
 import { getTaskById } from "@/server/repositories/tasks";
 
 const runRoleLabelMap: Record<string, string> = {
@@ -78,6 +81,9 @@ export default async function TaskDetailPage({
   params: Promise<{ taskId: string }>;
 }) {
   const { taskId } = await params;
+  const refreshIntervalMs = getLiveRouteRefreshIntervalMs(
+    appEnv.taskPollerIntervalMs,
+  );
   const task = await getTaskById(taskId);
 
   if (!task) {
@@ -112,6 +118,7 @@ export default async function TaskDetailPage({
 
   return (
     <>
+      <RouteAutoRefresh intervalMs={refreshIntervalMs} />
       <PageHeader
         eyebrow={`Task #${task.sequence}`}
         title={task.title}

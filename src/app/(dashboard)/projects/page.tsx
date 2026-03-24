@@ -1,13 +1,21 @@
 import Link from "next/link";
+import { connection } from "next/server";
 
+import { RouteAutoRefresh } from "@/components/common/route-auto-refresh";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/common/stat-card";
 import { ProjectTable } from "@/components/projects/project-table";
 import { Button } from "@/components/ui/button";
+import { appEnv } from "@/lib/env";
+import { getLiveRouteRefreshIntervalMs } from "@/lib/live-updates";
 import { listProjects } from "@/server/repositories/projects";
 
 export default async function ProjectsPage() {
+  await connection();
+  const refreshIntervalMs = getLiveRouteRefreshIntervalMs(
+    appEnv.taskPollerIntervalMs,
+  );
   const projects = await listProjects();
   const totalTasks = projects.reduce(
     (acc, project) => acc + project.taskCount,
@@ -16,6 +24,7 @@ export default async function ProjectsPage() {
 
   return (
     <>
+      <RouteAutoRefresh intervalMs={refreshIntervalMs} />
       <PageHeader
         eyebrow="Projects"
         title="项目列表"

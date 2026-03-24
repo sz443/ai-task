@@ -16,6 +16,7 @@
   "scripts": {
     "dev": "tsx scripts/run-with-poller.ts dev",
     "setup": "tsx scripts/setup.ts",
+    "bootstrap": "pnpm run setup && pnpm run db:init",
     "doctor": "tsx scripts/doctor.ts",
     "build": "next build",
     "start": "tsx scripts/run-with-poller.ts start",
@@ -25,6 +26,7 @@
     "typecheck": "tsc --noEmit",
     "task:poller": "tsx scripts/task-poller.ts",
     "task:poller:once": "tsx scripts/task-poller.ts --once",
+    "db:init": "pnpm run db:migrate && pnpm run db:seed",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

@@ -38,10 +38,10 @@ cd ai-task
 pnpm install
 ```
 
-### 3. 一键初始化 OpenClaw
+### 3. 一键初始化开发环境
 
 ```bash
-pnpm setup
+pnpm run bootstrap
 ```
 
 这个命令会自动完成：
@@ -51,11 +51,21 @@ pnpm setup
 - 生成 `dispatcher / frontend / qa / reviewer` 四个 agent
 - 写入对应的 skills 配置
 - 如果项目根目录缺少 `.env`，则根据 `.env.example` 自动生成
+- 执行 Prisma migration，确保本地 SQLite 表结构已创建
+- 写入演示项目与任务 seed 数据
+
+如果你只想更新 OpenClaw 配置，不初始化数据库，可以单独执行：
+
+```bash
+pnpm run setup
+```
+
+注意：这里必须写 `pnpm run setup`。`pnpm setup` 是 pnpm 自带命令，不会执行仓库里的 `scripts/setup.ts`。
 
 ### 4. 运行自检
 
 ```bash
-pnpm doctor
+pnpm run doctor
 ```
 
 自检会检查：
@@ -86,11 +96,12 @@ http://localhost:3000
 
 ## 数据库初始化
 
-如果你第一次启动，需要准备 Prisma 数据库：
+`pnpm run bootstrap` 已经包含数据库初始化。
+
+如果你重置了本地数据库，或想单独重新初始化 Prisma 数据，可以执行：
 
 ```bash
-pnpm db:push
-pnpm db:seed
+pnpm run db:init
 ```
 
 ## 任务轮询
@@ -128,6 +139,8 @@ pnpm task:poller
 - 描述
 - 项目
 
+任务中心里的“所属项目”下拉选项会按请求实时读取最新项目列表；新增、修改、删除项目后，再进入新建任务页即可看到最新结果。
+
 验收标准可以留空，dispatcher 会在运行时自动补全分析结果与建议性验收标准。
 
 ### 3. 自动进入执行流程
@@ -154,7 +167,8 @@ pnpm task:poller
 ## 常用命令
 
 ```bash
-pnpm setup           # 初始化 OpenClaw agents 与配置
+pnpm run bootstrap   # 初始化 OpenClaw 配置 + 本地数据库 + seed 数据
+pnpm run setup       # 仅初始化 OpenClaw agents 与配置
 pnpm doctor          # 运行环境与配置自检
 pnpm dev             # 启动 Web 应用 + poller
 pnpm dev:web         # 仅启动 Web 开发服务
@@ -165,6 +179,7 @@ pnpm typecheck       # TypeScript 校验
 pnpm lint            # ESLint 校验
 pnpm task:poller     # 持续轮询任务
 pnpm task:poller:once # 单次轮询
+pnpm run db:init     # 执行 Prisma migration 并写入 seed 数据
 pnpm db:push         # 推送 Prisma schema
 pnpm db:seed         # 初始化示例数据
 ```
@@ -173,7 +188,9 @@ pnpm db:seed         # 初始化示例数据
 
 ### `pnpm setup` 提示找不到 openclaw
 
-说明本机尚未安装 OpenClaw，或命令不在 PATH 中。请先确保下面命令可执行：
+如果你执行的是 `pnpm setup`，那其实跑的是 pnpm 自带命令。这个仓库里要执行初始化脚本，请使用 `pnpm run setup` 或 `pnpm run bootstrap`。
+
+如果执行 `pnpm run setup` / `pnpm run bootstrap` 后仍提示找不到 `openclaw`，说明本机尚未安装 OpenClaw，或命令不在 PATH 中。请先确保下面命令可执行：
 
 ```bash
 which openclaw
@@ -187,6 +204,20 @@ openclaw --help
 - `~/.openclaw/openclaw.json` 是否存在
 - `openclaw config validate` 是否通过
 - `.env` 是否存在
+
+### `pnpm build` 提示 `main.Project` 或 `main.Task` 不存在
+
+说明本地 Prisma 数据库还没有完成初始化。先执行：
+
+```bash
+pnpm run db:init
+```
+
+如果你还没有做过完整环境初始化，直接执行：
+
+```bash
+pnpm run bootstrap
+```
 
 ### 任务没有自动进入流程
 
@@ -202,4 +233,3 @@ openclaw --help
 
 - 任务描述是否足够明确
 - dispatcher 输出的分析与验证命令是否合理
-

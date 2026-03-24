@@ -1,8 +1,11 @@
+import { connection } from "next/server";
+
 import { PageHeader } from "@/components/common/page-header";
 import { TaskForm } from "@/components/tasks/task-form";
 import { listProjects } from "@/server/repositories/projects";
 
 export default async function NewTaskPage() {
+  await connection();
   const projects = await listProjects();
 
   return (

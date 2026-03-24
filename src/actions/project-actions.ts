@@ -36,6 +36,7 @@ export async function createProjectAction(
   try {
     const project = await createProject(parsed.data);
     safeRevalidatePath("/projects");
+    safeRevalidatePath("/tasks/new");
     return { success: true, data: project };
   } catch (error) {
     return {
@@ -67,6 +68,7 @@ export async function updateProjectAction(
     const project = await updateProject(projectId, parsed.data);
     safeRevalidatePath("/projects");
     safeRevalidatePath(`/projects/${projectId}`);
+    safeRevalidatePath("/tasks/new");
     return { success: true, data: project };
   } catch (error) {
     return {
@@ -84,6 +86,7 @@ export async function deleteProjectAction(
   try {
     await deleteProject(projectId);
     safeRevalidatePath("/projects");
+    safeRevalidatePath("/tasks/new");
     return { success: true, data: { id: projectId } };
   } catch (error) {
     return {
